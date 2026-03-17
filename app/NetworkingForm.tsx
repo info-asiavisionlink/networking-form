@@ -430,7 +430,7 @@ export default function NetworkingForm() {
 
             <div className="rounded-xl">
               <p className="mb-2 text-xs text-zinc-700">
-                自己紹介・会社紹介・URL掲載のいずれかを選択できます（任意）
+                自己紹介・会社紹介・URL掲載のいずれかを1つ選び、選んだ項目は必ず入力してください
               </p>
               <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
                 <label
@@ -492,8 +492,8 @@ export default function NetworkingForm() {
                 <div>
                   <label className="mb-2 block text-sm font-semibold">
                     自己PR{" "}
-                    <span className="rounded-full border border-zinc-300 bg-zinc-100 px-2.5 py-0.5 text-[11px] text-zinc-600">
-                      任意
+                    <span className="rounded-full border border-amber-300/80 bg-amber-50 px-2.5 py-0.5 text-[11px] text-amber-700">
+                      選択時は必須
                     </span>
                   </label>
                   <p className="mb-2 text-xs text-zinc-700">
@@ -524,8 +524,8 @@ export default function NetworkingForm() {
                 <div>
                   <label className="mb-2 block text-sm font-semibold">
                     会社PR{" "}
-                    <span className="rounded-full border border-zinc-300 bg-zinc-100 px-2.5 py-0.5 text-[11px] text-zinc-600">
-                      任意
+                    <span className="rounded-full border border-amber-300/80 bg-amber-50 px-2.5 py-0.5 text-[11px] text-amber-700">
+                      選択時は必須
                     </span>
                   </label>
                   <textarea
@@ -552,8 +552,8 @@ export default function NetworkingForm() {
                 <div>
                   <label className="mb-2 block text-sm font-semibold">
                     会社サイト・SNS・ポートフォリオURL{" "}
-                    <span className="rounded-full border border-zinc-300 bg-zinc-100 px-2.5 py-0.5 text-[11px] text-zinc-600">
-                      任意
+                    <span className="rounded-full border border-amber-300/80 bg-amber-50 px-2.5 py-0.5 text-[11px] text-amber-700">
+                      選択時は必須
                     </span>
                   </label>
                   <input
