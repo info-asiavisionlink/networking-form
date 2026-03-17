@@ -86,6 +86,11 @@ export default function NetworkingForm() {
   }, [formData]);
 
   const isSelectedCompanyInfoInvalid = () => {
+    // 未選択はNG
+    if (!formData.company_info_mode) {
+      return true;
+    }
+
     if (formData.company_info_mode === "self_pr") {
       return !formData.self_pr.trim();
     }
@@ -96,7 +101,8 @@ export default function NetworkingForm() {
       const url = formData.profile_url.trim();
       return !url || !isValidUrl(url);
     }
-    return false;
+
+    return true;
   };
 
   const validateForm = () => {
@@ -642,6 +648,12 @@ export default function NetworkingForm() {
             {submitStatus === "error" && (
               <p className="rounded-xl border border-red-200 bg-red-50/90 px-4 py-3 text-sm text-red-800 shadow-sm">
                 送信に失敗しました。通信環境をご確認のうえ、再度お試しください。
+              </p>
+            )}
+
+            {isSelectedCompanyInfoInvalid() && (
+              <p className="text-sm text-red-600 mt-2">
+                自己PR・会社PR・URLのいずれかを選択し、内容を入力してください
               </p>
             )}
 
