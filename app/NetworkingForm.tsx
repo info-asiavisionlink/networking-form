@@ -29,9 +29,7 @@ type NetworkingFormData = {
   receipt_name: string;
 };
 
-type FormErrors = Partial<
-  Record<keyof NetworkingFormData | "company_info_content", string>
->;
+type FormErrors = Partial<Record<keyof NetworkingFormData, string>>;
 
 const initialFormData: NetworkingFormData = {
   reception_number: "",
@@ -87,6 +85,20 @@ export default function NetworkingForm() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(formData));
   }, [formData]);
 
+  const isSelectedCompanyInfoInvalid = () => {
+    if (formData.company_info_mode === "self_pr") {
+      return !formData.self_pr.trim();
+    }
+    if (formData.company_info_mode === "company_pr") {
+      return !formData.company_pr.trim();
+    }
+    if (formData.company_info_mode === "url") {
+      const url = formData.profile_url.trim();
+      return !url || !isValidUrl(url);
+    }
+    return false;
+  };
+
   const validateForm = () => {
     const nextErrors: FormErrors = {};
     const receptionNumber = formData.reception_number.trim();
@@ -117,19 +129,35 @@ export default function NetworkingForm() {
     if (formData.receipt_needed === "希望する" && !formData.receipt_name.trim()) {
       nextErrors.receipt_name = "領収書宛名を入力してください。";
     }
-    if (
-      formData.company_info_mode === "url" &&
-      formData.profile_url.trim() &&
-      !isValidUrl(formData.profile_url.trim())
-    ) {
-      nextErrors.profile_url = "正しいURLを入力してください";
+    const mode = formData.company_info_mode;
+    if (!mode) {
+      nextErrors.company_info_mode =
+        "会社情報または自己PRの入力方法を選択してください";
+    } else if (mode === "self_pr") {
+      if (!formData.self_pr.trim()) {
+        nextErrors.self_pr = "自己PRを入力してください";
+      }
+    } else if (mode === "company_pr") {
+      if (!formData.company_pr.trim()) {
+        nextErrors.company_pr = "会社PRを入力してください";
+      }
+    } else if (mode === "url") {
+      const url = formData.profile_url.trim();
+      if (!url) {
+        nextErrors.profile_url = "URLを入力してください";
+      } else if (!isValidUrl(url)) {
+        nextErrors.profile_url = "正しいURLを入力してください";
+      }
     }
+
     const hasAnyCompanyInfoInput =
       !!formData.self_pr.trim() ||
       !!formData.company_pr.trim() ||
       !!formData.profile_url.trim();
     if (!hasAnyCompanyInfoInput) {
-      nextErrors.company_info_content = "どれか1つは必ず入力してください";
+      if (mode === "self_pr") nextErrors.self_pr = "自己PRを入力してください";
+      if (mode === "company_pr") nextErrors.company_pr = "会社PRを入力してください";
+      if (mode === "url") nextErrors.profile_url = "URLを入力してください";
     }
 
     return nextErrors;
@@ -191,11 +219,42 @@ export default function NetworkingForm() {
   const handleFieldChange = (field: keyof NetworkingFormData, value: string) => {
     const normalizedValue =
       field === "reception_number" ? value.replace(/[^\d]/g, "") : value;
-    setFormData((prev) => ({ ...prev, [field]: normalizedValue }));
+    setFormData((prev) => {
+      if (field === "company_info_mode") {
+        if (normalizedValue === "self_pr") {
+          return {
+            ...prev,
+            company_info_mode: "self_pr",
+            company_pr: "",
+            profile_url: "",
+          };
+        }
+        if (normalizedValue === "company_pr") {
+          return {
+            ...prev,
+            company_info_mode: "company_pr",
+            self_pr: "",
+            profile_url: "",
+          };
+        }
+        if (normalizedValue === "url") {
+          return {
+            ...prev,
+            company_info_mode: "url",
+            self_pr: "",
+            company_pr: "",
+          };
+        }
+      }
+      return { ...prev, [field]: normalizedValue };
+    });
     setErrors((prev) => ({
       ...prev,
       [field]: undefined,
-      company_info_content: undefined,
+      company_info_mode: undefined,
+      self_pr: undefined,
+      company_pr: undefined,
+      profile_url: undefined,
     }));
   };
 
@@ -369,11 +428,7 @@ export default function NetworkingForm() {
               />
             </div>
 
-            <div
-              className={`rounded-xl ${
-                errors.company_info_content ? "border border-red-300 p-3" : ""
-              }`}
-            >
+            <div className="rounded-xl">
               <p className="mb-2 text-xs text-zinc-700">
                 自己紹介・会社紹介・URL掲載のいずれかを選択できます（任意）
               </p>
@@ -430,10 +485,6 @@ export default function NetworkingForm() {
                   URLを貼る
                 </label>
               </div>
-              {errors.company_info_content && (
-                <p className="mb-2 text-sm text-red-600">{errors.company_info_content}</p>
-              )}
-
               {formData.company_info_mode === "self_pr" && (
                 <div>
                   <label className="mb-2 block text-sm font-semibold">
@@ -448,7 +499,11 @@ export default function NetworkingForm() {
                   <textarea
                     value={formData.self_pr}
                     onChange={(e) => handleFieldChange("self_pr", e.target.value)}
-                    className={`${FIELD_CLASS} min-h-36 border-2 border-yellow-400 shadow-[0_0_0_3px_rgba(250,204,21,0.18)] transition-colors duration-200`}
+                    className={`${FIELD_CLASS} min-h-36 border-2 ${
+                      errors.self_pr
+                        ? "border-red-400 shadow-[0_0_0_3px_rgba(248,113,113,0.2)]"
+                        : "border-yellow-400 shadow-[0_0_0_3px_rgba(250,204,21,0.18)]"
+                    } transition-colors duration-200`}
                     placeholder={`例：
 ・こんな人脈の方と繋がりたい
 ・交流会で新しい仕事のきっかけを作りたい
@@ -456,6 +511,9 @@ export default function NetworkingForm() {
 ・将来的に事業を広げていきたい
 ・一緒に挑戦できる仲間と出会いたい`}
                   />
+                  {errors.self_pr && (
+                    <p className="mt-1 text-sm text-red-600">{errors.self_pr}</p>
+                  )}
                 </div>
               )}
 
@@ -470,13 +528,20 @@ export default function NetworkingForm() {
                   <textarea
                     value={formData.company_pr}
                     onChange={(e) => handleFieldChange("company_pr", e.target.value)}
-                    className={`${FIELD_CLASS} min-h-36 border-2 border-yellow-400 shadow-[0_0_0_3px_rgba(250,204,21,0.18)] transition-colors duration-200`}
+                    className={`${FIELD_CLASS} min-h-36 border-2 ${
+                      errors.company_pr
+                        ? "border-red-400 shadow-[0_0_0_3px_rgba(248,113,113,0.2)]"
+                        : "border-yellow-400 shadow-[0_0_0_3px_rgba(250,204,21,0.18)]"
+                    } transition-colors duration-200`}
                     placeholder={`例：
 ・会社の事業内容
 ・提供しているサービス
 ・他社との違い
 ・今後強化したいこと`}
                   />
+                  {errors.company_pr && (
+                    <p className="mt-1 text-sm text-red-600">{errors.company_pr}</p>
+                  )}
                 </div>
               )}
 
@@ -492,7 +557,11 @@ export default function NetworkingForm() {
                     type="url"
                     value={formData.profile_url}
                     onChange={(e) => handleFieldChange("profile_url", e.target.value)}
-                    className={`${FIELD_CLASS} border-2 border-yellow-400 shadow-[0_0_0_3px_rgba(250,204,21,0.18)] transition-colors duration-200`}
+                    className={`${FIELD_CLASS} border-2 ${
+                      errors.profile_url
+                        ? "border-red-400 shadow-[0_0_0_3px_rgba(248,113,113,0.2)]"
+                        : "border-yellow-400 shadow-[0_0_0_3px_rgba(250,204,21,0.18)]"
+                    } transition-colors duration-200`}
                     placeholder="例：https://example.com"
                   />
                   {errors.profile_url && (
@@ -575,7 +644,7 @@ export default function NetworkingForm() {
 
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || isSelectedCompanyInfoInvalid()}
               className="relative min-h-12 w-full rounded-xl border border-amber-200/40 bg-zinc-900 px-4 py-3 text-base font-semibold text-white shadow-[0_10px_26px_rgba(15,23,42,0.24)] transition hover:bg-black disabled:cursor-not-allowed disabled:border-zinc-300 disabled:bg-zinc-400 disabled:shadow-none"
             >
               {isSubmitting ? "送信中..." : "内容を送信する"}
