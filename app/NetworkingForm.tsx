@@ -29,7 +29,9 @@ type NetworkingFormData = {
   receipt_name: string;
 };
 
-type FormErrors = Partial<Record<keyof NetworkingFormData, string>>;
+type FormErrors = Partial<
+  Record<keyof NetworkingFormData | "company_info_content", string>
+>;
 
 const initialFormData: NetworkingFormData = {
   reception_number: "",
@@ -122,6 +124,13 @@ export default function NetworkingForm() {
     ) {
       nextErrors.profile_url = "正しいURLを入力してください";
     }
+    const hasAnyCompanyInfoInput =
+      !!formData.self_pr.trim() ||
+      !!formData.company_pr.trim() ||
+      !!formData.profile_url.trim();
+    if (!hasAnyCompanyInfoInput) {
+      nextErrors.company_info_content = "どれか1つは必ず入力してください";
+    }
     if (!formData.company_info_mode) {
       nextErrors.company_info_mode =
         "会社情報または自己PRの入力方法を選択してください";
@@ -186,37 +195,12 @@ export default function NetworkingForm() {
   const handleFieldChange = (field: keyof NetworkingFormData, value: string) => {
     const normalizedValue =
       field === "reception_number" ? value.replace(/[^\d]/g, "") : value;
-    setFormData((prev) => {
-      if (field === "company_info_mode") {
-        if (normalizedValue === "self_pr") {
-          return {
-            ...prev,
-            company_info_mode: "self_pr",
-            company_pr: "",
-            profile_url: "",
-          };
-        }
-        if (normalizedValue === "company_pr") {
-          return {
-            ...prev,
-            company_info_mode: "company_pr",
-            self_pr: "",
-            profile_url: "",
-          };
-        }
-        if (normalizedValue === "url") {
-          return {
-            ...prev,
-            company_info_mode: "url",
-            self_pr: "",
-            company_pr: "",
-          };
-        }
-      }
-
-      return { ...prev, [field]: normalizedValue };
-    });
-    setErrors((prev) => ({ ...prev, [field]: undefined }));
+    setFormData((prev) => ({ ...prev, [field]: normalizedValue }));
+    setErrors((prev) => ({
+      ...prev,
+      [field]: undefined,
+      company_info_content: undefined,
+    }));
   };
 
   const handleFormKeyDown = (event: KeyboardEvent<HTMLFormElement>) => {
@@ -389,7 +373,11 @@ export default function NetworkingForm() {
               />
             </div>
 
-            <div>
+            <div
+              className={`rounded-xl ${
+                errors.company_info_content ? "border border-red-300 p-3" : ""
+              }`}
+            >
               <p className="mb-2 text-xs text-zinc-700">
                 自己紹介・会社紹介・URL掲載のいずれかを選択できます（任意）
               </p>
@@ -448,6 +436,9 @@ export default function NetworkingForm() {
               </div>
               {errors.company_info_mode && (
                 <p className="mb-2 text-sm text-red-600">{errors.company_info_mode}</p>
+              )}
+              {errors.company_info_content && (
+                <p className="mb-2 text-sm text-red-600">{errors.company_info_content}</p>
               )}
 
               {formData.company_info_mode === "self_pr" && (
