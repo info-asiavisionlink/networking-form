@@ -131,10 +131,6 @@ export default function NetworkingForm() {
     if (!hasAnyCompanyInfoInput) {
       nextErrors.company_info_content = "どれか1つは必ず入力してください";
     }
-    if (!formData.company_info_mode) {
-      nextErrors.company_info_mode =
-        "会社情報または自己PRの入力方法を選択してください";
-    }
 
     return nextErrors;
   };
@@ -434,9 +430,6 @@ export default function NetworkingForm() {
                   URLを貼る
                 </label>
               </div>
-              {errors.company_info_mode && (
-                <p className="mb-2 text-sm text-red-600">{errors.company_info_mode}</p>
-              )}
               {errors.company_info_content && (
                 <p className="mb-2 text-sm text-red-600">{errors.company_info_content}</p>
               )}
