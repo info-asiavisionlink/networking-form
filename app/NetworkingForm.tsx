@@ -485,6 +485,9 @@ export default function NetworkingForm() {
                   URLを貼る
                 </label>
               </div>
+              {errors.company_info_mode && (
+                <p className="mb-2 text-sm text-red-600">{errors.company_info_mode}</p>
+              )}
               {formData.company_info_mode === "self_pr" && (
                 <div>
                   <label className="mb-2 block text-sm font-semibold">
